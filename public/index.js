@@ -74,6 +74,7 @@ function get_user_chats(element) {
 }
 if (user_name == "" || user_name == undefined) {
     console.error("username is invalid")
+    window.open(originserver, "_self")
 }
 else {
     socket.connect()
