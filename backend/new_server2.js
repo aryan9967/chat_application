@@ -9,7 +9,7 @@ import path from "path";
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); 
+const __dirname = path.dirname(__filename);
 
 dotenv.config()
 
@@ -49,12 +49,12 @@ app.post("/login", async function (req, res) {
 
     const username = req.body.username
     const password = req.body.password
-    // console.log(username, password)
+    console.log(username, password)
     const docSnap = await getDoc(doc(db, "users", username))
 
     if (docSnap.data()) {
         const user = docSnap.data()
-        // console.log(user)
+        console.log(user)
 
         if (password == user.password) {
             var response = {
@@ -128,12 +128,19 @@ io.use((socket, next) => {
 
 io.on("connection", async (socket) => {
     const users = []
-    const previouschats = []
-    const querySnapshot1 = await getDocs(collection(db, "users"));
+    let groups = []
+    let previouschats = []
+    let invites = []
 
+    await updateDoc(doc(db, "users", socket.user_name), {
+        last_seen: "online"
+    })
+
+    socket.join(socket.user_name)
+
+    const querySnapshot1 = await getDocs(collection(db, "users"));
     querySnapshot1.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
-
         const act_data = doc.data()
         const userid = act_data.userid
         users.push(userid)
@@ -143,103 +150,66 @@ io.on("connection", async (socket) => {
     console.log(socket.user_name)
 
     socket.emit("all_users", users)
+
     socket.broadcast.emit("update_users", users)
 
-    const querySnapshot2 = await getDocs(collection(db, "users", socket.user_name, "chats"));
-    // console.log("q2",querySnapshot2)
-    querySnapshot2.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        // console.log(doc.data());
-        const prev_chats = doc.data()
-        console.log("1", prev_chats)
-        // previouschats.push(prev_chats)
-        // console.log("previous chats",previouschats)
-        const arr_prev_chat = prev_chats.act_chats;
-        // for (var i = 0; i < arr_prev_chat.length; i++) {
-        //     previouschats.push(arr_prev_chat[i])
-        // }
-        previouschats.push(arr_prev_chat)
-        // previouschats.push(arr_prev_chat)
-        // console.log(previouschats)
-    });
-    console.log("2",previouschats)
-    // var date = new Date(previouschats[0].timestamp)
-    // console.log(date)
+    const docSnap = await getDoc(doc(db, "users", socket.user_name));
+    const act_data = docSnap.data()
+
+    previouschats = act_data.previous_chats
+    console.log("previous chats", previouschats)
+
+    groups = act_data.groups
+    console.log("groups", groups)
+
+    invites = act_data.invites
+    console.log(invites)
 
     socket.emit("previous_chats", previouschats)
 
-    socket.join(socket.user_name)
+    if (groups) {
+        socket.emit("groups", groups)
+        for (var i = 0; i < groups.length; i++) {
+            socket.join(groups[i])
+        }
+    }
+    else {
+        console.log("user is not present in any groups")
+    }
 
-    socket.on("private_message", async (details) => {
-        const receiver_id = details.receiver_id
-        const sender_id = socket.user_name
-        const message = details.message
-        const time = Date.now()
+    if (invites) {
+        socket.emit("invites", invites)
+    }
+    else {
+        console.log("user doesnt have any invites")
+    }
 
-        const docRef = doc(db, "users", receiver_id, "chats", sender_id);
-        const docSnap = await getDoc(docRef);
+    socket.on("get_chat", async (other_id) => {
+        console.log(other_id)
 
-        if (docSnap.exists()) {
-            console.log("Document data:", docSnap.data());
-            console.log("updating", receiver_id, "chats", sender_id)
-            await updateDoc(doc(db, "users", receiver_id, "chats", sender_id), {
-                act_chats: arrayUnion({
-                    message: message,
-                    sender_id: sender_id,
-                    receiver_id: receiver_id,
-                    timestamp: time
-                })
-            });
+        let docSnap = await getDoc(doc(db, "chats", socket.user_name + other_id))
+
+        if (docSnap.data()) {
+            console.log("socket + other", docSnap.data())
+            const act_data = docSnap.data()
+            const arr_prev_chat = act_data.act_chats
+            socket.emit("prev_message", arr_prev_chat)
         }
         else {
-            // docSnap.data() will be undefined in this case
-            console.log("setting", receiver_id, "chats", sender_id)
-            await setDoc(doc(db, "users", receiver_id, "chats", sender_id), {
-                act_chats: [{
-                    message: message,
-                    sender_id: sender_id,
-                    receiver_id: receiver_id,
-                    timestamp: time
-                }]
-            })
+            let docSnap = await getDoc(doc(db, "chats", other_id + socket.user_name))
+            if (docSnap.data()) {
+                console.log("other + socket", docSnap.data())
+                const act_data = docSnap.data()
+                const arr_prev_chat = act_data.act_chats
+                socket.emit("prev_message", arr_prev_chat)
+            }
         }
+    })
 
-        const docRef1 = doc(db, "users", sender_id, "chats", receiver_id);
-        const docSnap1 = await getDoc(docRef1);
-
-        if (docSnap1.exists()) {
-            console.log("Document data:", docSnap.data());
-            console.log("updating", sender_id, "chats", receiver_id)
-            await updateDoc(doc(db, "users", sender_id, "chats", receiver_id), {
-                act_chats: arrayUnion({
-                    message: message,
-                    sender_id: sender_id,
-                    receiver_id: receiver_id,
-                    timestamp: time
-                })
-            });
-        }
-        else {
-            // docSnap.data() will be undefined in this case
-            console.log("setting", sender_id, "chats", receiver_id)
-            await setDoc(doc(db, "users", sender_id, "chats", receiver_id), {
-                act_chats: [{
-                    message: message,
-                    sender_id: sender_id,
-                    receiver_id: receiver_id,
-                    timestamp: time
-                }]
-            })
-        }
-
-        const complete_message = {
-            receiver_id: receiver_id,
-            sender_id: sender_id,
-            message: message,
-            time: time
-        }
-        console.log(complete_message)
-        socket.to(receiver_id).emit("new_message", complete_message)
+    socket.on("disconnect", async () => {
+        await updateDoc(doc(db, "users", socket.user_name), {
+            last_seen: Date.now()
+        })
     })
 })
 
