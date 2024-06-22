@@ -1,21 +1,33 @@
 <html>
+
 <head>
     <title>Whatsapp</title>
     <link rel="stylesheet" href="css/index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://kit.fontawesome.com/c33097aea5.js" crossorigin="anonymous"></script>
 </head>
+
 <body>
     <!-- here goes the app name -->
     <div class="header">
-        <p>My Chat<p>
+        <p>My Chat
+        <p>
         <p id="username_id"></p>
     </div>
     <div class="content">
         <div class="leftside">
             <div class="search">
-                <h2>Search </h2>
-                <div class="search_bar"><input type="search" placeholder="Search a chat..."><button class="search_enter"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+                <div class="search_title">
+                    <h2>Search </h2><button class="default_btn" onclick="display()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div id="extra_options" class="extra_options">
+                        <div class="extra_optn" onclick="show_invites()">
+                            Invites
+                        </div>
+                    </div>
+                </div>
+                <div class="search_bar"><input id="search_value" type="text" placeholder="Search users..."
+                        onkeyup="display_user()"><button class="search_enter"><i
+                            class="fa-solid fa-magnifying-glass"></i></button></div>
             </div>
             <div class="chat_name" id="prev_user_list">
                 <!-- <button>Aryan</button>
@@ -34,26 +46,34 @@
         </div>
         <div class="rightside">
             <div class="profile" id="top_profile">
-                     
-                
+
+
             </div>
             <div class="messages">
                 <div class="send" id="act_chat_area">
                     <!-- chats go here -->
-                     
+
                     <!-- <div class="positioning">
                         <div class="msg_sent">hi i am aryan hi i am aryan hi i am aryan hi i Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero, voluptates!</div>
                     </div>
                     <div class="msg_rcvd">hi i am ayush </div> -->
                 </div>
                 <div class="enter_area" id="enter_area_id">
-                     
+
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="invite_con" id="invite_con">
+        <div class="heading">Invites <button class="close_btn" onclick="close_func()"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="invites" id="invites_act_con">
+            
+            
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
 
     <script src="chat.js"></script>
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 async function register() {
-    const username = document.getElementById("username").value
+    const username = document.getElementById("username").value.trim()
     const password = document.getElementById("password").value
     const name = document.getElementById("name").value
     const email = document.getElementById("email").value
@@ -32,9 +32,12 @@ async function register() {
                 alert("Username is already taken. please enter a different username")
             }
             else if (act_res.user_created) {
-                alert("user created successfully. Login to proceed ")
+                alert("user created successfully")
+                sessionStorage.setItem('username', act_res.username)
+                // console.log(window.location.origin)
                 
-                window.open(`${origin_server}/login.html`, "_self")
+                window.open(`${origin_server}/chat.html`, "_self")
+                
                 // window.open("http://127.0.0.1:5500/login.html", "_self")
             }
         }

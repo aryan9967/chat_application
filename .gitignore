@@ -1,2 +1,5 @@
 backend/node_modules
 backend/.env
+public/index.js
+backend/new_server.js
+backend/server.js
