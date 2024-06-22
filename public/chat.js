@@ -471,7 +471,7 @@ function display() {
 
 
 function show_invites() {
-    document.getElementById("extra_options").style.display == ""
+    document.getElementById("extra_options").style.display = ""
     const invite_container = document.getElementById("invite_con")
     if (invite_container.style.display == "") {
         invite_container.style.display = "block"
